@@ -16,21 +16,21 @@ function Run {
 
     # ログ出力開始
     [object] $logger = [Logger]::new($LOG_FILE_PATH)
-    $logger.Logging("info", "Start send-cdi-smart.")
+    $logger.Logging("info", "=== Start send-cdi-smart. ===")
 
     # アプリケーション設定ファイル
-    Set-Variable -name INI_FILE_NAME -value "config.ini" -option constant
-    Set-Variable -name INI_FILE_PATH -value ($ROOT_DIR + "\" + $INI_FILE_NAME) -option constant
+    Set-Variable -name CONFIG_FILE_NAME -value "config.json" -option constant
+    Set-Variable -name CONFIG_FILE_PATH -value ($ROOT_DIR + "\" + $CONFIG_FILE_NAME) -option constant
 
     # 設定ファイルがあれば実行
-    if(Test-Path $INI_FILE_PATH){
+    if(Test-Path $CONFIG_FILE_PATH){
         . "./app/main"
-        Main $INI_FILE_PATH $logger
+        Main $CONFIG_FILE_PATH $logger
     }else{
-        $logger.Logging("error", "[{0}] is NOT exists." -f $INI_FILE_PATH)
+        $logger.Logging("error", "[{0}] is NOT exists." -f $CONFIG_FILE_PATH)
     }
 
-    $logger.Logging("info", "Quit the Application.")
+    $logger.Logging("info", "=== Quit the Application. ===")
 }
 
 

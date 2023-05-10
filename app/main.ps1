@@ -1,50 +1,44 @@
-using module "./module/ini.psm1"
 using module "./module/smart.psm1"
 
 
-function Main([string] $iniFilePath, [object] $logger) {
-    # 設定iniファイル読み込み
-    $logger.Logging("info", "Load ini file [{0}]." -f $iniFilePath)
-    [object] $ini = [IniFile]::new()
-    [object] $config = $ini.IniToJson($iniFilePath)
+function Main([string] $configFilePath, [object] $logger) {
+    # 設定ファイル読み込み
+    $logger.Logging("info", "Load config file [{0}]." -f $configFilePath)
+    [object] $config = (Get-Content $configFilePath | ConvertFrom-Json)
 
     # コピー先ディレクトリがなかったら作成
-    if(!(Test-Path "./data")){
-        New-Item "./data" -ItemType Directory
+    Set-Variable -name DATA_DIR -value "./data" -option constant
+    if(!(Test-Path $DATA_DIR)){
+        New-Item $DATA_DIR -ItemType Directory
+        $logger.Logging("info", "mkdir [{0}]." -f $DATA_DIR)
     }
-    # コピー先のディレクトリ
-    [string] $copyDestinationDirectory = Convert-Path "./data"
+    # コピー先のディレクトリ(Convert-Path：絶対パスに変換)
+    [string] $copyDestinationDirectory = Convert-Path $DATA_DIR
 
-    # CDIの設定ファイルをコピーしてくる
-    [string] $cdiDirectory = $config['CDI_DIRECTORY']
-    [string] $cdiIniFileName = "DiskInfo.ini"
-    [string] $cdiIniFilePath = "{0}\{1}" -f $cdiDirectory, $cdiIniFileName
+    # CDIのコマンドラインオプションでSMARTをDiskInfo.txt に出力
+    # https://crystalmark.info/ja/software/crystaldiskinfo/crystaldiskinfo-advanced-features/
+    Set-Variable -name CDI_EXE_FILE_PATH -value ("{0}\{1}" -f $config.CDI_DIRECTORY, $config.CDI_EXE_FILE) -option constant
+    Start-Process -FilePath $CDI_EXE_FILE_PATH -Wait -ArgumentList $config.CDI_OPTION
 
-    # CDIの設定ファイルをdataディレクトリにコピー
-    if(Test-Path $cdiIniFilePath){
-        $logger.Logging("info", ("Copy [{0}] to [{1}]." -f $cdiIniFilePath, $copyDestinationDirectory))
-        Copy-Item -Path $cdiIniFilePath -Destination $copyDestinationDirectory -Force
+    # 取得したSMARTファイルをコピーしてくる
+    Set-Variable -name CDI_SMART_FILE_NAME -value "DiskInfo.txt" -option constant
+    [string] $cdiSmartFilePath = "{0}\{1}" -f $config.CDI_DIRECTORY, $CDI_SMART_FILE_NAME
+    # dataディレクトリにコピー
+    if(Test-Path $cdiSmartFilePath){
+        $logger.Logging("info", ("Copy [{0}] to [{1}]." -f $cdiSmartFilePath, $copyDestinationDirectory))
+        Copy-Item -Path $cdiSmartFilePath -Destination $copyDestinationDirectory -Force
     }else{
-        $logger.Logging("error", ("[{0}] is NOT exists." -f $cdiIniFilePath))
-    }
-    # コピーしたCDI設定ファイルを読み込み
-    [string] $copiedCdiIniFilePath = "{0}\{1}" -f $copyDestinationDirectory, $cdiIniFileName
-    [object] $cdiConfig = $ini.IniToJson($copiedCdiIniFilePath)
-
-    # CDIのSmartファイルをdataディレクトリにコピー
-    [string] $smartDirectory = $cdiDirectory + "\Smart"
-    if(Test-Path $smartDirectory){
-        $logger.Logging("info", ("Copy [{0}] to [{1}]." -f $smartDirectory, $copyDestinationDirectory))
-        # Smart.iniファイルだけをコピー
-        Copy-Item -Filter Smart.ini -Recurse $smartDirectory -Destination $copyDestinationDirectory -Force
+        $logger.Logging("error", ("[{0}] is NOT exists." -f $cdiSmartFilePath))
     }
 
-    # コピーしたSmartディレクトリ
-    [string] $copiedSmartDirectory = $copyDestinationDirectory + "\Smart"
-    # Smart情報抽出
-    $smart = [Smart]::new($config, $cdiConfig, $copiedSmartDirectory)
-    $smartInfo = $smart.extractSmart()
+    # コピーしたSMARTファイルを読み込み
+    [string] $copiedCdiSmartFilePath = "{0}\{1}" -f $copyDestinationDirectory, $CDI_SMART_FILE_NAME
+
+    [object] $smart = [Smart]::new($copiedCdiSmartFilePath)
+
+    [array] $diskList = $smart.findDiskList()
+    [object] $smartInfo = $smart.extractSmart($diskList)
 
     $smartInfo | ConvertTo-Json -Depth 5 | Out-File "./data/smart.json" -Encoding utf8
-    $smartInfo | ConvertTo-Html | Out-File "./data/smart.html" -Encoding utf8
+    # $smartInfo | ConvertTo-Html | Out-File "./data/smart.html" -Encoding utf8
 }

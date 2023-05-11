@@ -63,8 +63,6 @@ class Smart {
             [string] $detail = $diskDetailAndSmart["detail"]
             [string] $smart = $diskDetailAndSmart["smart"]
 
-            Write-Host $smart
-
             # 詳細部分の処理
             # --- Input Ex ---
             # Model : KIOXIA-EXCERIA PLUS G2 SSD
@@ -96,7 +94,7 @@ class Smart {
             [array] $smartLines = $smart.split("`r`n")
             foreach($line in $smartLines){
                 [object] $smartPerId = [System.Collections.Generic.Dictionary[String, PSObject]]::new()
-                [object] $smartValues = [System.Collections.Generic.Dictionary[String, PSObject]]::new()
+                [object] $smartValues = [System.Collections.Generic.Dictionary[String, String]]::new()
                 [array] $smartDataRow = @()
 
                 # 行の値ごとの処理

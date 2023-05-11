@@ -99,7 +99,7 @@ class Smart {
 
                 # 行の値ごとの処理
                 # 「Attribute Name」カラムには半角スペースが入っていることがあるため
-                # 半角スペースでSplitすると、ヘッダー行の長さとデータ行の長さがズレる
+                # 半角スペースでSplitすると、ヘッダー行配列の長さとデータ行配列の長さがズレることがある
                 # そのため、いったん半角スペースを取り除いてヘッダー・データを配列に入れておく
                 [array] $columns = $line.split(" ")
                 for([int] $i = 0; $i -lt $columns.Length; $i++){
@@ -112,7 +112,7 @@ class Smart {
                         }
                     }else{
                         # 「Attribute Name」→ 「AttributeName」にしたので
-                        # 「SMART配列の長さ > ヘッダー配列の長さ」になっている
+                        # 「データ配列の長さ > ヘッダー配列の長さ」になっていることがある
                         # なので、SMART配列のインデックスがヘッダー配列長さを超えたら直前の値に結合する
                         if($i -gt $smartHeader.Length - 1){
                             $smartDataRow[-1] += $columns[$i]

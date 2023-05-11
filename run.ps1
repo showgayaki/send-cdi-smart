@@ -1,4 +1,4 @@
-. "./app/logger"
+using module "./app/module/logger.psm1"
 
 
 function Run {

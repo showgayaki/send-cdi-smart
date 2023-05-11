@@ -1,19 +1,30 @@
 using module "./module/smart.psm1"
 
 
+function makeDirectory([object] $logger, [string] $dir){
+    [bool] $testPath = Test-Path $dir
+    if(!$testPath){
+        New-Item $dir -ItemType Directory
+    }
+
+    [string] $absolutePath = Convert-Path $dir
+    if(!$testPath){
+        $logger.Logging("info", "mkdir [${absolutePath}].")
+    }else{
+        $logger.Logging("info", "[${absolutePath}] is already exists.")
+    }
+    # 絶対パスを返す
+    return $absolutePath
+}
+
+
 function Main([string] $configFilePath, [object] $logger) {
     # 設定ファイル読み込み
     $logger.Logging("info", "Load config file [{0}]." -f $configFilePath)
     [object] $config = (Get-Content $configFilePath | ConvertFrom-Json)
 
     # コピー先ディレクトリがなかったら作成
-    Set-Variable -name DATA_DIR -value "./data" -option constant
-    if(!(Test-Path $DATA_DIR)){
-        New-Item $DATA_DIR -ItemType Directory
-        $logger.Logging("info", "mkdir [{0}]." -f $DATA_DIR)
-    }
-    # コピー先のディレクトリ(Convert-Path：絶対パスに変換)
-    [string] $copyDestinationDirectory = Convert-Path $DATA_DIR
+    [string] $copyDestinationDirectory = makeDirectory $logger "./data"
 
     # 出力・コピーしてくるSMART情報テキストファイル
     Set-Variable -name CDI_SMART_FILE_NAME -value "DiskInfo.txt" -option constant
@@ -35,12 +46,19 @@ function Main([string] $configFilePath, [object] $logger) {
 
     # コピーしたSMARTファイルを読み込み
     [string] $copiedCdiSmartFilePath = "{0}\{1}" -f $copyDestinationDirectory, $CDI_SMART_FILE_NAME
-
+    $logger.Logging("info", ("Load [{0}]." -f $copiedCdiSmartFilePath))
+    # SMART情報取得
     [object] $smart = [Smart]::new($copiedCdiSmartFilePath)
-
-    # [array] $diskList = $smart.findDiskList()
     [object] $smartInfo = $smart.extractSmart()
+    # jsonファイルに書き出し
+    [string] $now = (Get-Date).ToString("yyyy-MM-dd_HHmmss")
+    [string] $smartOutputDirectory = makeDirectory $logger "./data/smart"
+    [string] $smartJsonPath = "${smartOutputDirectory}/${now}.json"
+    $smartInfo | ConvertTo-Json -Depth 5 | Out-File $smartJsonPath -Encoding utf8
 
-    $smartInfo | ConvertTo-Json -Depth 5 | Out-File "./data/smart.json" -Encoding utf8
-    # $smartInfo | ConvertTo-Html | Out-File "./data/smart.html" -Encoding utf8
+    if(Test-Path $smartJsonPath){
+        $logger.Logging("info", ("Success: Output SMART to [{0}]." -f $smartJsonPath))
+    }else{
+        $logger.Logging("error", ("Failed: Output SMART to [{0}]." -f $smartJsonPath))
+    }
 }

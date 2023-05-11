@@ -15,13 +15,15 @@ function Main([string] $configFilePath, [object] $logger) {
     # コピー先のディレクトリ(Convert-Path：絶対パスに変換)
     [string] $copyDestinationDirectory = Convert-Path $DATA_DIR
 
+    # 出力・コピーしてくるSMART情報テキストファイル
+    Set-Variable -name CDI_SMART_FILE_NAME -value "DiskInfo.txt" -option constant
+
     # CDIのコマンドラインオプションでSMARTをDiskInfo.txt に出力
     # https://crystalmark.info/ja/software/crystaldiskinfo/crystaldiskinfo-advanced-features/
     Set-Variable -name CDI_EXE_FILE_PATH -value ("{0}\{1}" -f $config.CDI_DIRECTORY, $config.CDI_EXE_FILE) -option constant
     Start-Process -FilePath $CDI_EXE_FILE_PATH -Wait -ArgumentList $config.CDI_OPTION
 
     # 取得したSMARTファイルをコピーしてくる
-    Set-Variable -name CDI_SMART_FILE_NAME -value "DiskInfo.txt" -option constant
     [string] $cdiSmartFilePath = "{0}\{1}" -f $config.CDI_DIRECTORY, $CDI_SMART_FILE_NAME
     # dataディレクトリにコピー
     if(Test-Path $cdiSmartFilePath){
@@ -36,8 +38,8 @@ function Main([string] $configFilePath, [object] $logger) {
 
     [object] $smart = [Smart]::new($copiedCdiSmartFilePath)
 
-    [array] $diskList = $smart.findDiskList()
-    [object] $smartInfo = $smart.extractSmart($diskList)
+    # [array] $diskList = $smart.findDiskList()
+    [object] $smartInfo = $smart.extractSmart()
 
     $smartInfo | ConvertTo-Json -Depth 5 | Out-File "./data/smart.json" -Encoding utf8
     # $smartInfo | ConvertTo-Html | Out-File "./data/smart.html" -Encoding utf8

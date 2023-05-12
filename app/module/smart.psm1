@@ -47,6 +47,16 @@ class Smart {
         return $detailAndSmartDictionary
     }
 
+    [array] sortArray([array] $array){
+        # [ID, AttributeName, 各項目｡｡｡]の順にする
+        [array] $firstColumn = $array[0]
+        [array] $arrayCenter = $array[1..($array.Length - 2)]
+        [array] $lastColumn = $array[-1]
+
+        [array] $sortedArray = $firstColumn + $lastColumn + $arrayCenter
+        return $sortedArray
+    }
+
     [object] extractSmart(){
         # ディスクリスト取得
         [array] $diskList = $this.findDiskList()
@@ -93,8 +103,6 @@ class Smart {
             [array] $smartHeader = @()
             [array] $smartLines = $smart.split("`r`n")
             foreach($line in $smartLines){
-                [object] $smartPerId = [System.Collections.Generic.Dictionary[String, PSObject]]::new()
-                [object] $smartValues = [System.Collections.Generic.Dictionary[String, String]]::new()
                 [array] $smartDataRow = @()
 
                 # 行の値ごとの処理
@@ -103,6 +111,9 @@ class Smart {
                 # そのため、いったん半角スペースを取り除いてヘッダー・データを配列に入れておく
                 [array] $columns = $line.split(" ")
                 for([int] $i = 0; $i -lt $columns.Length; $i++){
+                    # DiskInfo.txtで、桁揃えに使われているアンダースコアは削除
+                    $columns[$i] = $columns[$i].Replace("_", "")
+                    # ヘッダー行
                     if($line.Contains("ID")){
                         # 「Attribute Name」の間のスペースなくして結合
                         if($columns[$i] -eq "Name"){
@@ -122,34 +133,25 @@ class Smart {
                     }
                 }
 
-                # データ行の処理
-                for([int] $i = 0; $i -lt $smartDataRow.Length; $i++){
-                    # ID: {"RawValues(6)": "XXX", ...}
-                    # の形にするので、いったんIDカラムは除いて値を取る
-                    if($i -gt 0){
-                        $smartValues.Add($smartHeader[$i], $smartDataRow[$i])
-                    }
+                if($smartPerDisk["SmartHeader"] -eq $null){
+                    [array] $sortedSmartHeader = $this.sortArray($smartHeader)
+                    $smartPerDisk["SmartHeader"] = $sortedSmartHeader
+                }
 
-                    # 行の最後の要素での処理
-                    if($i -eq $smartDataRow.Length - 1){
-                        # ID: {"RawValues(6)": "XXX", ...} の形でAdd
-                        $smartPerId.Add($smartDataRow[0], $smartValues)
-                        $smartPerDisk["Smart"] += $smartPerId
-                    }
+                [array] $sortedSmartDataRow = @()
+                if($smartDataRow -ne $null){
+                    $sortedSmartDataRow = $this.sortArray($smartDataRow)
+                }
+
+                # SMART情報をDictionaryに登録
+                if($smartPerDisk["Smart"] -eq $null){
+                    $smartPerDisk["Smart"] = $sortedSmartDataRow
+                }else{
+                    # 2行目以降は追加
+                    # 追加の場合は「+=」と変数前のカンマが必要らしい
+                    $smartPerDisk["Smart"] += ,$sortedSmartDataRow
                 }
             }
-
-            # SMART情報のIDでソート
-            # https://stackoverflow.com/questions/60687333/sort-a-nested-hash-table-by-value
-            $sortedSmartPerDisk = [System.Collections.Generic.Dictionary[String, PSObject]]::new()
-            $smartPerDisk["Smart"].GetEnumerator() | Sort-Object {
-                # Sort by first key from each inner hashtable
-                $_.Key | Select-Object -First 1
-            } | ForEach-Object {
-                # re-assign to our ordered dictionary
-                $sortedSmartPerDisk[$_.Key] = $_.Value
-            }
-            $smartPerDisk["Smart"] = $sortedSmartPerDisk
         }
         return $smartAll
     }

@@ -1,4 +1,4 @@
-using module "./app/module/logger.psm1"
+using module ".\app\module\logger.psm1"
 
 
 function Run {
@@ -24,7 +24,7 @@ function Run {
 
     # 設定ファイルがあれば実行
     if(Test-Path $CONFIG_FILE_PATH){
-        . "./app/main"
+        . ".\app\main"
         Main $CONFIG_FILE_PATH $logger
     }else{
         $logger.Logging("error", "[{0}] is NOT exists." -f $CONFIG_FILE_PATH)

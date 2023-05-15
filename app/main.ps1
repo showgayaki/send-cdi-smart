@@ -1,5 +1,6 @@
 using module ".\module\smart.psm1"
 using module ".\module\html.psm1"
+using module ".\module\mail.psm1"
 
 
 function makeDirectory([object] $logger, [string] $dir){
@@ -19,10 +20,24 @@ function makeDirectory([object] $logger, [string] $dir){
 }
 
 
-function Main([string] $configFilePath, [object] $logger) {
+function fileExists([object] $logger, [hashtable] $pathes){
+    [bool] $isExists = $true
+    foreach($key in $pathes.Keys){
+        if(Test-Path $pathes[$key]){
+            $logger.Logging("info", "Exists [{0}]" -f $pathes[$key])
+        }else{
+            $logger.Logging("error", "NOT exists [{0}]" -f $pathes[$key])
+            $isExists = $false
+        }
+    }
+    return $isExists
+}
+
+
+function main([string] $configFilePath, [object] $logger) {
     # 設定ファイル読み込み
     $logger.Logging("info", "Load config file [{0}]." -f $configFilePath)
-    [object] $config = (Get-Content $configFilePath | ConvertFrom-Json)
+    [hashtable] $config = (Get-Content $configFilePath | ConvertFrom-Json -AsHashtable)
 
     # コピー先ディレクトリがなかったら作成
     [string] $copyDestinationDirectory = makeDirectory $logger ".\data"
@@ -65,8 +80,40 @@ function Main([string] $configFilePath, [object] $logger) {
         $logger.Logging("error", ("Failed: Output SMART to [{0}]." -f $smartJsonPath))
     }
 
+    # HTML作成
     [string] $baseHtmlPath = Convert-Path ".\app\template\base.html"
     [object] $html = [Html]::new($baseHtmlPath)
     [string] $htmlContent = $html.BuildHtmlContent($smartInfo)
-    $htmlContent | Out-File ".\data\html\smart.html" -Encoding utf8
+
+    [string] $htmlOutputDirectory = makeDirectory $logger "D:\NAS\html"
+    [string] $hdmlOutFilePath = "${htmlOutputDirectory}\smart.html"
+    $htmlContent | Out-File $hdmlOutFilePath -Encoding utf8
+
+    if(Test-Path $hdmlOutFilePath){
+        $logger.Logging("info", ("Success: Output HTML to [{0}]." -f $hdmlOutFilePath))
+    }else{
+        $logger.Logging("error", ("Failed: Output HTML to [{0}]." -f $hdmlOutFilePath))
+    }
+
+    # メール用ライブラリ読み込み
+    [string] $mailLibraries = (@($config.MAIL_LIBRARIES.Keys) -join ", ")
+    $logger.Logging("info", ("Load mail libraries [{0}]." -f $mailLibraries))
+    [bool] $mailLibrariesExists = fileExists $logger $config.MAIL_LIBRARIES
+
+    # メール用ライブラリあったらメール送信実行
+    if($mailLibrariesExists){
+        $logger.Logging("info", ("Start to send email."))
+        [object] $mail = [Mail]::new($config.MAIL, $config.MAIL_LIBRARIES)
+        [hashtable] $mailResult = $mail.SendMail($htmlContent)
+
+        # メール送信結果
+        if($mailResult.done){
+            $logger.Logging("info", "Message sent successfully.")
+        }else{
+            $logger.Logging("error", $mailResult.message)
+        }
+    }else{
+        # メール用ライブラリがなかったらアプリケーション終了
+        return
+    }
 }

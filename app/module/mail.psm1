@@ -26,7 +26,7 @@ class Mail {
         $message.Body = $builder.ToMessageBody()
 
         try {
-            $smtp.Connect($this.mailConfig.SMTP_SERVER, $this.mailConfig.SMTP_PORT, $false)
+            $smtp.Connect($this.mailConfig.SMTP_SERVER, $this.mailConfig.SMTP_PORT, $false) -ErrorAction Stop
             # $password = ConvertTo-SecureString $this.mailConfig.SMTP_PASS -AsPlainText -Force
             # $credential = New-Object System.Management.Automation.PSCredential($from, $password)
             # $smtp.Authenticate($credential.username, $credential.password)

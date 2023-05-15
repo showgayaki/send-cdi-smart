@@ -10,7 +10,7 @@ class Html{
     [string] BuildHtmlContent([object] $smartAll){
         [string] $content = ""
         foreach($diskName in $smartAll.Keys){
-            $content += "<div>`r`n"
+            $content += "<div class=`"smart-per-disk`">`r`n"
             $content += "<h2>$diskName</h2>`r`n"
             $content += "<p>$($smartAll.$diskName.Firmware)</p>`r`n"
 

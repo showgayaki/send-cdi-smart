@@ -20,17 +20,31 @@ function makeDirectory([object] $logger, [string] $dir){
 }
 
 
+function stopProcess([string] $processName){
+    try {
+        Stop-Process -Name $processName -ErrorAction Stop
+        return @{ "done" = $true }
+    }
+    catch {
+        return @{
+            "done" = $false
+            "message" = $PSItem.Exception.Message
+        }
+    }
+}
+
 function fileExists([object] $logger, [hashtable] $pathes){
-    [bool] $isExists = $true
+    [bool] $exists = $false
     foreach($key in $pathes.Keys){
         if(Test-Path $pathes[$key]){
             $logger.Logging("info", "Exists [{0}]" -f $pathes[$key])
+            $exists = $true
         }else{
             $logger.Logging("error", "NOT exists [{0}]" -f $pathes[$key])
-            $isExists = $false
+            $exists = $false
         }
     }
-    return $isExists
+    return $exists
 }
 
 
@@ -44,6 +58,15 @@ function main([string] $configFilePath, [object] $logger) {
 
     # 出力・コピーしてくるSMART情報テキストファイル
     Set-Variable -name CDI_SMART_FILE_NAME -value "DiskInfo.txt" -option constant
+
+    # 多重起動できないようなので、すでに走っているDiskInfoプロセスをkillする
+    [string] $processName = $config.CDI_EXE_FILE.Replace(".exe", "")
+    [hashtable] $processStopped = stopProcess $processName
+    if($processStopped.done){
+        $logger.Logging("info", "[{0}] process stopped." -f $processName)
+    }else{
+        $logger.Logging("info", "{0}." -f $processStopped.message)
+    }
 
     # CDIのコマンドラインオプションでSMARTをDiskInfo.txt に出力
     # https://crystalmark.info/ja/software/crystaldiskinfo/crystaldiskinfo-advanced-features/
@@ -71,7 +94,6 @@ function main([string] $configFilePath, [object] $logger) {
     [string] $now = (Get-Date).ToString("yyyy-MM-dd_HHmmss")
     [string] $smartOutputDirectory = makeDirectory $logger ".\data\smart"
     [string] $smartJsonPath = "${smartOutputDirectory}/${now}.json"
-    # [string] $smartJsonPath = "${smartOutputDirectory}/smart.json"
     $smartInfo | ConvertTo-Json -Depth 5 | Out-File $smartJsonPath -Encoding utf8
 
     if(Test-Path $smartJsonPath){

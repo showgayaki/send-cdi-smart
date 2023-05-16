@@ -1,0 +1,16 @@
+{
+    "CDI_DIRECTORY": "C:\\Program Files\\CrystalDiskInfo",
+    "CDI_EXE_FILE": "DiskInfo64.exe",
+    "CDI_OPTION": "/CopyExit",
+    "MAIL": {
+        "SMTP_SERVER": "smtp.gmail.com",
+        "SMTP_PORT": 587,
+        "SMTP_USER": "soushinmoto-email-address",
+        "SMTP_PASS": "soushinmoto-email-password",
+        "TO": "okuritai-email-address"
+    },
+    "MAIL_LIBRARIES": {
+        "MAIL_KIT": "C:\\Program Files\\PackageManagement\\NuGet\\Packages\\MailKit.4.0.0\\lib\\netstandard2.0\\MailKit.dll",
+        "MIME_KIT": "C:\\Program Files\\PackageManagement\\NuGet\\Packages\\MimeKit.4.0.0\\lib\\netstandard2.0\\MimeKit.dll"
+    }
+}

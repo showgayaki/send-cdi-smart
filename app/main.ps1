@@ -80,7 +80,7 @@ function main([string] $configFilePath, [object] $logger) {
         $logger.Logging("info", ("Copy [{0}] to [{1}]." -f $cdiSmartFilePath, $copyDestinationDirectory))
         Copy-Item -Path $cdiSmartFilePath -Destination $copyDestinationDirectory -Force
     }else{
-        $logger.Logging("error", ("[{0}] is NOT exists." -f $cdiSmartFilePath))w
+        $logger.Logging("error", ("[{0}] is NOT exists." -f $cdiSmartFilePath))
         return
     }
 

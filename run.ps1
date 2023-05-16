@@ -1,7 +1,10 @@
 using module ".\app\module\logger.psm1"
 
 
-function Run {
+function run {
+    # 例外が発生したら、catchに入ってほしい
+    $ErrorActionPreference = "Stop"
+
     # プロジェクトのルートディレクトリ
     Set-Variable -name ROOT_DIR -value @(Split-Path $script:myInvocation.MyCommand.Path -Parent).Trim() -option constant
     # ログ関連
@@ -34,4 +37,4 @@ function Run {
 }
 
 
-Run
+run

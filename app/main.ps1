@@ -22,7 +22,7 @@ function makeDirectory([object] $logger, [string] $dir){
 
 function stopProcess([string] $processName){
     try {
-        Stop-Process -Name $processName -ErrorAction Stop
+        Stop-Process -Name $processName
         return @{ "done" = $true }
     }
     catch {
@@ -32,6 +32,7 @@ function stopProcess([string] $processName){
         }
     }
 }
+
 
 function fileExists([object] $logger, [hashtable] $pathes){
     [bool] $exists = $false
@@ -53,19 +54,13 @@ function main([string] $configFilePath, [object] $logger) {
     $logger.Logging("info", "Load config file [{0}]." -f $configFilePath)
     [hashtable] $config = (Get-Content $configFilePath | ConvertFrom-Json -AsHashtable)
 
-    # コピー先ディレクトリがなかったら作成
-    [string] $copyDestinationDirectory = makeDirectory $logger ".\data"
-
-    # 出力・コピーしてくるSMART情報テキストファイル
-    Set-Variable -name CDI_SMART_FILE_NAME -value "DiskInfo.txt" -option constant
-
     # 多重起動できないようなので、すでに走っているDiskInfoプロセスをkillする
     [string] $processName = $config.CDI_EXE_FILE.Replace(".exe", "")
     [hashtable] $processStopped = stopProcess $processName
     if($processStopped.done){
         $logger.Logging("info", "[{0}] process stopped." -f $processName)
     }else{
-        $logger.Logging("info", "{0}." -f $processStopped.message)
+        $logger.Logging("error", "{0}." -f $processStopped.message)
     }
 
     # CDIのコマンドラインオプションでSMARTをDiskInfo.txt に出力
@@ -74,19 +69,30 @@ function main([string] $configFilePath, [object] $logger) {
     $logger.Logging("info", ("Start Process: [{0} {1}]" -f $CDI_EXE_FILE_PATH, $config.CDI_OPTION))
     Start-Process -FilePath $CDI_EXE_FILE_PATH -Wait -ArgumentList $config.CDI_OPTION
 
-    # 取得したSMARTファイルをコピーしてくる
+    # 出力・コピーしてくるSMART情報テキストファイル名
+    Set-Variable -name CDI_SMART_FILE_NAME -value "DiskInfo.txt" -option constant
+    # ex) C:\Program Files\CrystalDiskInfo\DiskInfo.txt
     [string] $cdiSmartFilePath = "{0}\{1}" -f $config.CDI_DIRECTORY, $CDI_SMART_FILE_NAME
+    # コピー先ディレクトリがなかったら作成
+    [string] $copyDestinationDirectory = makeDirectory $logger ".\data"
     # dataディレクトリにコピー
     if(Test-Path $cdiSmartFilePath){
         $logger.Logging("info", ("Copy [{0}] to [{1}]." -f $cdiSmartFilePath, $copyDestinationDirectory))
         Copy-Item -Path $cdiSmartFilePath -Destination $copyDestinationDirectory -Force
     }else{
-        $logger.Logging("error", ("[{0}] is NOT exists." -f $cdiSmartFilePath))
+        $logger.Logging("error", ("[{0}] is NOT exists." -f $cdiSmartFilePath))w
+        return
     }
 
     # コピーしたSMARTファイルを読み込み
     [string] $copiedCdiSmartFilePath = "{0}\{1}" -f $copyDestinationDirectory, $CDI_SMART_FILE_NAME
-    $logger.Logging("info", ("Load [{0}]." -f $copiedCdiSmartFilePath))
+    if(Test-Path $copiedCdiSmartFilePath){
+        $logger.Logging("info", ("Load [{0}]." -f $copiedCdiSmartFilePath))
+    }else{
+        $logger.Logging("error", ("[{0}] is NOT exists." -f $copiedCdiSmartFilePath))
+        return
+    }
+
     # SMART情報取得
     [object] $smart = [Smart]::new($copiedCdiSmartFilePath)
     [object] $smartInfo = $smart.extractSmart()
@@ -100,6 +106,7 @@ function main([string] $configFilePath, [object] $logger) {
         $logger.Logging("info", ("Success: Output SMART to [{0}]." -f $smartJsonPath))
     }else{
         $logger.Logging("error", ("Failed: Output SMART to [{0}]." -f $smartJsonPath))
+        return
     }
 
     # HTML作成
@@ -108,13 +115,13 @@ function main([string] $configFilePath, [object] $logger) {
     [string] $htmlContent = $html.BuildHtmlContent($smartInfo)
 
     [string] $htmlOutputDirectory = makeDirectory $logger "D:\NAS\html"
-    [string] $hdmlOutFilePath = "${htmlOutputDirectory}\smart.html"
-    $htmlContent | Out-File $hdmlOutFilePath -Encoding utf8
+    [string] $htmlOutFilePath = "${htmlOutputDirectory}\smart.html"
+    $htmlContent | Out-File $htmlOutFilePath -Encoding utf8
 
-    if(Test-Path $hdmlOutFilePath){
-        $logger.Logging("info", ("Success: Output HTML to [{0}]." -f $hdmlOutFilePath))
+    if(Test-Path $htmlOutFilePath){
+        $logger.Logging("info", ("Success: Output HTML to [{0}]." -f $htmlOutFilePath))
     }else{
-        $logger.Logging("error", ("Failed: Output HTML to [{0}]." -f $hdmlOutFilePath))
+        $logger.Logging("error", ("Failed: Output HTML to [{0}]." -f $htmlOutFilePath))
     }
 
     # メール用ライブラリ読み込み

@@ -65,6 +65,8 @@ class Smart {
 
         # ディスクごとに詳細とSMART情報を抜き出してjsonにする
         foreach($diskName in $diskList){
+            # ドライブレターごとの配列
+            [array] $disksPerDriveLetter = @()
             # ディスクごとのDictionary
             [object] $smartPerDisk = [System.Collections.Generic.Dictionary[String, PSObject]]::new()
 
@@ -79,6 +81,7 @@ class Smart {
             # Firmware : ECFA11.3
             # -------------
             [array] $detailLines = $detail.split("`r`n")
+            [string] $driveLetter = ""
             foreach($line in $detailLines){
                 [array] $splited = $line.split(":").Trim()
                 # 1行目はModel
@@ -87,12 +90,15 @@ class Smart {
                 }elseif($splited[0] -eq "Serial Number") {
                     # 同モデルのディスクがあるかもしれないので、モデル名にシリアルNoを足しておく
                     $model = "{0}_{1}" -f $model, $splited[1]
+                }elseif($splited[0] -eq "Drive Letter"){
+                    $driveLetter = $splited[1].Replace(":", "")
                 }else{
                     # 「:」あとのValueから前後・文字間のスペースを削除してAdd
                     $smartPerDisk.Add($splited[0].Replace(" ", "").Trim(), $splited[1].Trim())
                 }
             }
-            $smartAll.Add($model, $smartPerDisk)
+            $disksPerDriveLetter += @{$model = $smartPerDisk}
+            $smartAll[$driveLetter] += $disksPerDriveLetter
 
             # SMART部分の処理
             # --- Input Ex ---
@@ -133,18 +139,18 @@ class Smart {
                     }
                 }
 
-                if($smartPerDisk["SmartHeader"] -eq $null){
+                if($null -eq $smartPerDisk["SmartHeader"]){
                     [array] $sortedSmartHeader = $this.sortArray($smartHeader)
                     $smartPerDisk["SmartHeader"] = $sortedSmartHeader
                 }
 
                 [array] $sortedSmartDataRow = @()
-                if($smartDataRow -ne $null){
+                if($null -ne $smartDataRow){
                     $sortedSmartDataRow = $this.sortArray($smartDataRow)
                 }
 
                 # SMART情報をDictionaryに登録
-                if($smartPerDisk["Smart"] -eq $null){
+                if($null -eq $smartPerDisk["Smart"]){
                     $smartPerDisk["Smart"] = $sortedSmartDataRow
                 }else{
                     # 2行目以降は追加

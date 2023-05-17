@@ -28,7 +28,7 @@ function run {
     # 設定ファイルがあれば実行
     if(Test-Path $CONFIG_FILE_PATH){
         . ".\app\main"
-        main $CONFIG_FILE_PATH $logger
+        main
     }else{
         $logger.Logging("error", "[{0}] is NOT exists." -f $CONFIG_FILE_PATH)
     }

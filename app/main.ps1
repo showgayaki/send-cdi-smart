@@ -3,7 +3,7 @@ using module ".\module\html.psm1"
 using module ".\module\mail.psm1"
 
 
-function makeDirectory([object] $logger, [string] $dir){
+function makeDirectory([string] $dir){
     [bool] $testPath = Test-Path $dir
     if(!$testPath){
         New-Item $dir -ItemType Directory
@@ -34,7 +34,7 @@ function stopProcess([string] $processName){
 }
 
 
-function fileExists([object] $logger, [hashtable] $pathes){
+function fileExists([hashtable] $pathes){
     [bool] $exists = $false
     foreach($key in $pathes.Keys){
         if(Test-Path $pathes[$key]){
@@ -49,10 +49,10 @@ function fileExists([object] $logger, [hashtable] $pathes){
 }
 
 
-function main([string] $configFilePath, [object] $logger) {
+function main() {
     # 設定ファイル読み込み
-    $logger.Logging("info", "Load config file [{0}]." -f $configFilePath)
-    [hashtable] $config = (Get-Content $configFilePath | ConvertFrom-Json -AsHashtable)
+    $logger.Logging("info", "Load config file [{0}]." -f $CONFIG_FILE_PATH)
+    [hashtable] $config = (Get-Content $CONFIG_FILE_PATH | ConvertFrom-Json -AsHashtable)
 
     # 多重起動できないようなので、すでに走っているDiskInfoプロセスをkillする
     [string] $processName = $config.CDI_EXE_FILE.Replace(".exe", "")
@@ -74,7 +74,7 @@ function main([string] $configFilePath, [object] $logger) {
     # ex) C:\Program Files\CrystalDiskInfo\DiskInfo.txt
     [string] $cdiSmartFilePath = "{0}\{1}" -f $config.CDI_DIRECTORY, $CDI_SMART_FILE_NAME
     # コピー先ディレクトリがなかったら作成
-    [string] $copyDestinationDirectory = makeDirectory $logger ".\data"
+    [string] $copyDestinationDirectory = makeDirectory ".\data"
     # dataディレクトリにコピー
     if(Test-Path $cdiSmartFilePath){
         $logger.Logging("info", ("Copy [{0}] to [{1}]." -f $cdiSmartFilePath, $copyDestinationDirectory))
@@ -98,7 +98,7 @@ function main([string] $configFilePath, [object] $logger) {
     [object] $smartInfo = $smart.extractSmart()
     # jsonファイルに書き出し
     [string] $now = (Get-Date).ToString("yyyy-MM-dd_HHmmss")
-    [string] $smartOutputDirectory = makeDirectory $logger ".\data\smart"
+    [string] $smartOutputDirectory = makeDirectory ".\data\smart"
     [string] $smartJsonPath = "${smartOutputDirectory}/${now}.json"
     $smartInfo | ConvertTo-Json -Depth 5 | Out-File $smartJsonPath -Encoding utf8
 
@@ -114,7 +114,7 @@ function main([string] $configFilePath, [object] $logger) {
     [object] $html = [Html]::new($baseHtmlPath)
     [string] $htmlContent = $html.BuildHtmlContent($smartInfo)
 
-    [string] $htmlOutputDirectory = makeDirectory $logger "D:\NAS\html"
+    [string] $htmlOutputDirectory = makeDirectory "D:\NAS\html"
     [string] $htmlOutFilePath = "${htmlOutputDirectory}\smart.html"
     $htmlContent | Out-File $htmlOutFilePath -Encoding utf8
 
@@ -127,7 +127,7 @@ function main([string] $configFilePath, [object] $logger) {
     # メール用ライブラリ読み込み
     [string] $mailLibraries = (@($config.MAIL_LIBRARIES.Keys) -join ", ")
     $logger.Logging("info", ("Load mail libraries [{0}]." -f $mailLibraries))
-    [bool] $mailLibrariesExists = fileExists $logger $config.MAIL_LIBRARIES
+    [bool] $mailLibrariesExists = fileExists $config.MAIL_LIBRARIES
 
     # メール用ライブラリあったらメール送信実行
     if($mailLibrariesExists){

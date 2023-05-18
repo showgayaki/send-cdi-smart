@@ -3,58 +3,12 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-	<title></title>
+	<title>S.M.A.R.T. Info</title>
     <style>
-        *{
-            padding: 0;
-            margin: 0;
-        }
-        .container{
-            padding: 15px;
-        }
-        .driveLetter{
-            margin: 0 20px 20px;
-        }
-        .disks{
-            display: flex;
-        }
-        .smart-per-disk{
-            margin-right: 20px;
-        }
-        h2{
-            font-size: 18px;
-        }
-        h3{
-            font-size: 16px;
-            white-space: nowrap;
-        }
-        table{
-            border-collapse: collapse;
-        }
-        tr:nth-child(odd){
-            background-color:#f0f0f0;
-        }
-        tr:nth-child(even){
-            background-color:#fff;
-        }
-        th{
-            background-color: #79ace6;
-        }
-        th, td{
-            font-size: 0.8rem;
-            padding: 3px 5px;
-            border: solid 1px black;
-            white-space: nowrap;
-        }
-        .number{
-            text-align: right;
-        }
-        .caution{
-            background-color: red;
-        }
+        {{ style }}
 	</style>
 </head>
 <body>
-    {{ content }}
+{{ content }}
 </body>
 </html>

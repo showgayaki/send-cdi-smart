@@ -99,8 +99,9 @@ function main() {
     # jsonファイルに書き出し
     [string] $now = (Get-Date).ToString("yyyy-MM-dd_HHmmss")
     [string] $smartOutputDirectory = makeDirectory ".\data\smart"
-    [string] $smartJsonPath = "${smartOutputDirectory}/${now}.json"
+    [string] $smartJsonPath = "${smartOutputDirectory}\${now}.json"
     $smartInfo | ConvertTo-Json -Depth 5 | Out-File $smartJsonPath -Encoding utf8
+    # $smartInfo | ConvertTo-Json -Depth 5 | Out-File ".\data\smart\smart.json" -Encoding utf8
 
     if(Test-Path $smartJsonPath){
         $logger.Logging("info", ("Success: Output SMART to [{0}]." -f $smartJsonPath))
@@ -110,13 +111,14 @@ function main() {
     }
 
     # HTML作成
-    [string] $baseHtmlPath = Convert-Path ".\app\template\base.html"
-    [object] $html = [Html]::new($baseHtmlPath)
+    [string] $htmlTemplateDirectory = Convert-Path ".\app\template\"
+    [object] $html = [Html]::new($htmlTemplateDirectory)
     [string] $htmlContent = $html.BuildHtmlContent($smartInfo)
 
     [string] $htmlOutputDirectory = makeDirectory "D:\NAS\html"
     [string] $htmlOutFilePath = "${htmlOutputDirectory}\smart.html"
     $htmlContent | Out-File $htmlOutFilePath -Encoding utf8
+    # $htmlContent | Out-File ".\data\html\smart.html" -Encoding utf8
 
     if(Test-Path $htmlOutFilePath){
         $logger.Logging("info", ("Success: Output HTML to [{0}]." -f $htmlOutFilePath))

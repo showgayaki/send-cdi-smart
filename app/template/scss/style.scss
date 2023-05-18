@@ -1,0 +1,161 @@
+// reset
+*{
+    padding: 0;
+    margin: 0;
+}
+li {
+    list-style-type: none;
+}
+
+.container{
+    padding: 15px;
+}
+.drive-letter{
+    margin: 0 20px 20px;
+    &__title{
+        font-size: 20px;
+    }
+}
+
+.disk-list{
+    display: flex;
+}
+.disk{
+    min-width: 650px;
+    width: 650px;
+    padding: 15px;
+    border: 1px solid #333;
+    margin-right: 20px;
+    &__name{
+        margin: 0 auto 20px;
+        font-size: 18px;
+        text-align: center;
+        white-space: nowrap;
+    }
+    &__smart-table{
+        width: 100%;
+        border-collapse: collapse;
+    }
+}
+
+.disk-detail{
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    font-size: 12px;
+    text-align: center;
+    &__status{
+        width: 100px;
+    }
+    &__spec{
+        width: 350px;
+    }
+    &__data{
+        width: 200px;
+    }
+}
+.status{
+    &__description{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #77b6f6;
+        &--health{
+            height: 40px;
+            margin-bottom: 10px;
+        }
+        &--temp{
+            height: 30px;
+            border-radius: 20px;
+        }
+        &--caution{
+            background-color: #ffff00;
+        }
+        &--warning{
+            background-color: #f00;
+        }
+    }
+}
+
+.spec{
+    display: flex;
+    flex-wrap: wrap;
+    &__item-name{
+        width: 33%;
+        margin-right: 1%;
+        margin-bottom: 3px;
+        text-align: right;
+    }
+    &__description{
+        width: 63%;
+        padding: 0 1%;
+        margin-bottom: 3px;
+        text-align: left;
+        border: 1px solid #000;
+    }
+}
+
+.data{
+    display: flex;
+    flex-wrap: wrap;
+    &__item-name{
+        width: 54%;
+        margin-right: 1%;
+        margin-bottom: 3px;
+        text-align: right;
+    }
+    &__description{
+        width: 42%;
+        padding: 0 1%;
+        margin-bottom: 3px;
+        text-align: right;
+        border: 1px solid #000;
+    }
+}
+
+.smart-table{
+    &__row{
+        &:nth-child(odd){
+            background-color: #fff;
+        }
+        &:nth-child(even){
+            background-color: #f0f0f0;
+        }
+    }
+    &__header{
+        font-size: 0.8rem;
+        padding: 3px 5px;
+        border: solid 1px black;
+        white-space: nowrap;
+        text-align: center;
+        &--id{
+            width: 25px;
+        }
+        &--attribute-name{
+            text-align: left;
+        }
+        &--row-values{
+            text-align: right;
+        }
+    }
+    &__data{
+        font-size: 0.8rem;
+        padding: 3px 5px;
+        border: solid 1px black;
+        text-align: right;
+        white-space: nowrap;
+        &--id{
+            text-align: center;
+        }
+        &--attribute-name{
+            text-align: left;
+        }
+    }
+}
+
+.number{
+    text-align: right;
+}
+.caution{
+    background-color: red;
+}

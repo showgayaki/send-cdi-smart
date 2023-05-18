@@ -90,6 +90,7 @@ class Smart {
                 }elseif($splited[0] -eq "Serial Number") {
                     # 同モデルのディスクがあるかもしれないので、モデル名にシリアルNoを足しておく
                     $model = "{0}_{1}" -f $model, $splited[1]
+                    $smartPerDisk.Add($splited[0].Replace(" ", "").Trim(), $splited[1].Trim())
                 }elseif($splited[0] -eq "Drive Letter"){
                     $driveLetter = $splited[1].Replace(":", "")
                 }else{

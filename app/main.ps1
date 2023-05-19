@@ -63,19 +63,20 @@ function main() {
         $logger.Logging("error", "{0}." -f $processStopped.message)
     }
 
+    # 出力・コピーしてくるSMART情報テキストファイル名
+    Set-Variable -name CDI_SMART_FILE_NAME -value "DiskInfo.txt" -option constant
+    # コピー先ディレクトリがなかったら作成
+    [string] $copyDestinationDirectory = makeDirectory ".\data"
+
     # CDIのコマンドラインオプションでSMARTをDiskInfo.txt に出力
     # https://crystalmark.info/ja/software/crystaldiskinfo/crystaldiskinfo-advanced-features/
     Set-Variable -name CDI_EXE_FILE_PATH -value ("{0}\{1}" -f $config.CDI_DIRECTORY, $config.CDI_EXE_FILE) -option constant
     $logger.Logging("info", ("Start Process: [{0} {1}]" -f $CDI_EXE_FILE_PATH, $config.CDI_OPTION))
     Start-Process -FilePath $CDI_EXE_FILE_PATH -Wait -ArgumentList $config.CDI_OPTION
 
-    # 出力・コピーしてくるSMART情報テキストファイル名
-    Set-Variable -name CDI_SMART_FILE_NAME -value "DiskInfo.txt" -option constant
     # ex) C:\Program Files\CrystalDiskInfo\DiskInfo.txt
     [string] $cdiSmartFilePath = "{0}\{1}" -f $config.CDI_DIRECTORY, $CDI_SMART_FILE_NAME
-    # コピー先ディレクトリがなかったら作成
-    [string] $copyDestinationDirectory = makeDirectory ".\data"
-    # dataディレクトリにコピー
+    # # dataディレクトリにコピー
     if(Test-Path $cdiSmartFilePath){
         $logger.Logging("info", ("Copy [{0}] to [{1}]." -f $cdiSmartFilePath, $copyDestinationDirectory))
         Copy-Item -Path $cdiSmartFilePath -Destination $copyDestinationDirectory -Force
@@ -115,16 +116,16 @@ function main() {
     [object] $html = [Html]::new($htmlTemplateDirectory)
     [string] $htmlContent = $html.BuildHtmlContent($smartInfo)
 
-    [string] $htmlOutputDirectory = makeDirectory "D:\NAS\html"
-    [string] $htmlOutFilePath = "${htmlOutputDirectory}\smart.html"
-    $htmlContent | Out-File $htmlOutFilePath -Encoding utf8
+    # [string] $htmlOutputDirectory = makeDirectory "D:\NAS\html"
+    # [string] $htmlOutFilePath = "${htmlOutputDirectory}\smart.html"
+    # $htmlContent | Out-File $htmlOutFilePath -Encoding utf8
     # $htmlContent | Out-File ".\data\html\smart.html" -Encoding utf8
 
-    if(Test-Path $htmlOutFilePath){
-        $logger.Logging("info", ("Success: Output HTML to [{0}]." -f $htmlOutFilePath))
-    }else{
-        $logger.Logging("error", ("Failed: Output HTML to [{0}]." -f $htmlOutFilePath))
-    }
+    # if(Test-Path $htmlOutFilePath){
+    #     $logger.Logging("info", ("Success: Output HTML to [{0}]." -f $htmlOutFilePath))
+    # }else{
+    #     $logger.Logging("error", ("Failed: Output HTML to [{0}]." -f $htmlOutFilePath))
+    # }
 
     # メール用ライブラリ読み込み
     [string] $mailLibraries = (@($config.MAIL_LIBRARIES.Keys) -join ", ")

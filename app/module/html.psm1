@@ -11,9 +11,35 @@ class Html{
         $this.htmlContent = $this.htmlContent.Replace("{{ style }}", $this.cssContent)
     }
 
-    [hashtable] HealthStatus([string] $healthStatus){
-        $status, $percantage = $healthStatus.split(" ")
-        return @{}
+    [array] HealthStatus([string] $healthStatus){
+        $status, $percantage = $healthStatus.split(" (")
+        [string] $class = " status__description--"
+        switch ($status) {
+            "注意" { $class += "caution" }
+            "異常" { $class += "warning" }
+            Default { $class = "" }
+        }
+
+        $percantage = $percantage.Replace(")", "")
+        return @($class, $status, $percantage)
+    }
+
+    [array] Temperature([string] $temperature){
+        [string] $class = " status__description--"
+        $tempString = $temperature.split(" ")[0]
+        try {
+            $tempInt = [int]$tempString
+            if($tempInt -ge 55){
+                $class += "warning"
+            }elseif($tempInt -ge 50){
+                $class += "caution"
+            }
+            $tempString += " ℃"
+        }
+        catch {
+            @("", "0")
+        }
+        return @($class, $tempString)
     }
 
     [string] BuildHtmlContent([object] $smartAll){
@@ -24,8 +50,9 @@ class Html{
             $content += "<ul class=`"drive-letter__disk-list disk-list`">`r`n"
             foreach($disk in $smartAll.$driveLetter.Keys){
                 [string] $diskName = "{0} {1}" -f $disk.split("_")[0], $smartAll.$driveLetter.$disk.DiskSize
-                [string] $temperature = $smartAll.$driveLetter.$disk.Temperature # 温度
-                [string] $healthStatus = $smartAll.$driveLetter.$disk.HealthStatus # 健康状態
+
+                [array] $healthStatus = $this.HealthStatus($smartAll.$driveLetter.$disk.HealthStatus) # 健康状態
+                [array] $temperature = $this.Temperature($smartAll.$driveLetter.$disk.Temperature) # 温度
 
                 [string] $firmware = $smartAll.$driveLetter.$disk.Firmware # ファームウェア
                 [string] $serialNumber = $smartAll.$driveLetter.$disk.SerialNumber # シリアルナンバー
@@ -45,9 +72,9 @@ class Html{
 
                 $content += "<dl class=`"disk-detail__status status`">`r`n"
                 $content += "<dt class=`"status__name status__name--health`">健康状態</dt>`r`n"
-                $content += "<dd class=`"status__description status__description--health`">{0}</dd>`r`n" -f $healthStatus
+                $content += "<dd class=`"status__description status__description--health{0}`">{1}<br>{2}</dd>`r`n" -f $healthStatus
                 $content += "<dt class=`"status__name status__name--temp`">温度</dt>`r`n"
-                $content += "<dd class=`"status__description status__description--temp`">{0}</dd>`r`n" -f $temperature
+                $content += "<dd class=`"status__description status__description--temp{0}`">{1}</dd>`r`n" -f $temperature
                 $content += "</dl><!-- .disk-detail__status -->`r`n"
 
                 $content += "<dl class=`"disk-detail__spec spec`">`r`n"

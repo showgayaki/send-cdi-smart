@@ -67,3 +67,7 @@ config.json.sampleにメール情報を記載してconfig.jsonにリネーム。
 - プログラム/スクリプト： `"C:\Program Files\PowerShell\7\pwsh.exe"`
 - 引数の追加（オプション）： `-ExecutionPolicy RemoteSigned -File "run.ps1"`
 - 開始（オプション）： `D:\Projects\send-cdi-smart`
+
+
+## メールサンプル
+![mail-sample](https://github.com/showgayaki/send-cdi-smart/assets/47170845/6ac35ec3-8110-4bc3-8cb9-151adb4e2fcb)

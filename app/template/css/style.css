@@ -23,8 +23,8 @@ li {
 }
 
 .disk {
-  min-width: 650px;
-  width: 650px;
+  min-width: 600px;
+  width: 600px;
   padding: 15px;
   border: 1px solid #333;
   margin-right: 20px;
@@ -48,13 +48,13 @@ li {
   text-align: center;
 }
 .disk-detail__status {
-  width: 100px;
+  width: 13%;
 }
 .disk-detail__spec {
-  width: 350px;
+  width: 54%;
 }
 .disk-detail__data {
-  width: 200px;
+  width: 33%;
 }
 
 .status__description {
@@ -81,6 +81,8 @@ li {
 .spec {
   display: flex;
   flex-wrap: wrap;
+  font-size: 11px;
+  white-space: nowrap;
 }
 .spec__item-name {
   width: 33%;
@@ -99,6 +101,7 @@ li {
 .data {
   display: flex;
   flex-wrap: wrap;
+  font-size: 11px;
 }
 .data__item-name {
   width: 54%;

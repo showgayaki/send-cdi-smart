@@ -19,7 +19,6 @@ function run {
 
     # ログ出力開始
     [object] $logger = [Logger]::new($LOG_FILE_PATH)
-    $logger.Logging("info", "=== Start send-cdi-smart. ===")
 
     # アプリケーション設定ファイル
     Set-Variable -name CONFIG_FILE_NAME -value "config.json" -option constant

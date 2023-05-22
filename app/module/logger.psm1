@@ -8,7 +8,7 @@ class Logger {
 
     [void] LogRotate(){
         $this.Logging("info", "=== Check Logrotate. ===")
-        [int] $fileSizeThreshold = 1048576 - 500000
+        [int] $fileSizeThreshold = 1048576
         [int] $backupThreshold = 3
         [int] $logFileSize = (Get-Item $this.logFilePath).Length
 
